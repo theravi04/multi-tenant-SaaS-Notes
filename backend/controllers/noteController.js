@@ -1,5 +1,6 @@
 import prisma from "../config/db.js";
 
+// create note overall in one slug 3 (untill upgrade)
 export const createNote = async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -12,7 +13,7 @@ export const createNote = async (req, res) => {
     const noteCount = await prisma.note.count({
       where: {
         tenantId: req.user.tenantId,
-        createdBy: req.user.id,
+        // createdBy: req.user.id,
       }
     })
 
@@ -37,6 +38,7 @@ export const createNote = async (req, res) => {
   }
 };
 
+// get notes with the author
 export const getNotes = async (req, res) => {
   const notes = await prisma.note.findMany({
     where: { tenantId: req.user.tenantId, },
@@ -45,6 +47,7 @@ export const getNotes = async (req, res) => {
   res.json(notes);
 };
 
+// get note by id of note
 export const getNoteById = async (req, res) => {
   const note = await prisma.note.findUnique({ where: { id: req.params.id } });
   if (!note || note.tenantId !== req.user.tenantId) {
@@ -53,6 +56,7 @@ export const getNoteById = async (req, res) => {
   res.json(note);
 };
 
+// update note
 export const updateNote = async (req, res) => {
   const note = await prisma.note.findUnique({ where: { id: req.params.id } });
   if (!note || note.tenantId !== req.user.tenantId) {
@@ -67,6 +71,7 @@ export const updateNote = async (req, res) => {
   res.json(updated);
 };
 
+// delete note
 export const deleteNote = async (req, res) => {
   const note = await prisma.note.findUnique({ where: { id: req.params.id } });
   if (!note || note.tenantId !== req.user.tenantId) {

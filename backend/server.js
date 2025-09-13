@@ -1,9 +1,9 @@
-// server.js
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import morgan from "morgan";
 
+// routes import
 import authRoutes from "./routes/authRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
 import tenantRoutes from "./routes/tenantRoutes.js";

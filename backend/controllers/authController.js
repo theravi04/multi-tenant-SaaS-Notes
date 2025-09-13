@@ -2,6 +2,7 @@ import prisma from "../config/db.js";
 import bcrypt from "bcryptjs";
 import generateToken from "../utils/generateToken.js";
 
+// login of all types of user
 export const login = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ message: "email & password required" });
@@ -29,6 +30,7 @@ export const login = async (req, res) => {
   });
 };
 
+// added this to reflect update in plan after upgrade limit (free -> pro)
 export const getMe = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
