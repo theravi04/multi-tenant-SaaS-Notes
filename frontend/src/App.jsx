@@ -16,7 +16,7 @@ export default function App() {
   const [limitReached, setLimitReached] = useState(false);
   const [health, setHealth] = useState(null);
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("Member");
+  const [role, setRole] = useState("member");
   const [msg, setMsg] = useState(null);
   const [toEdit, setToEdit] = useState(null);
   const [updatedTitle, setUpdatedTitle] = useState("");
@@ -198,24 +198,20 @@ export default function App() {
 
   // invite a user to slug-by admin
   async function invite(e) {
-    e.preventDefault();
-    try {
-      const res = await apiFetch(`${API_BASE}/tenants/${tenantSlug}/invite`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ email, role }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to invite");
-      setMsg({ type: "success", text: `Invited ${data.user.email}` });
-      setEmail("");
-    } catch (err) {
-      setMsg({ type: "error", text: err.message });
-    }
+  e.preventDefault();
+  try {
+    const data = await apiFetch(`/tenants/${user.tenantSlug}/invite`, token, {
+      method: "POST",
+      json: { email, role },   // use the `json` shortcut in apiFetch
+    });
+    setMsg({ type: "success", text: `Invited ${data.user.email}` });
+    setEmail("");
+  } catch (err) {
+    console.error(err);
+    setMsg({ type: "error", text: err.message });
   }
+}
+
 
   // refresh the plan of current user(admin) after upgrade
   async function fetchMe(currentToken = token) {
@@ -331,14 +327,14 @@ export default function App() {
               required
               className="w-full border rounded px-2 py-1"
             />
-            <select
+            <input
+              type="text"
               value={role}
               onChange={(e) => setRole(e.target.value)}
+              placeholder="admin or member"
+              required
               className="w-full border rounded px-2 py-1"
-            >
-              <option value="Member">Member</option>
-              <option value="Admin">Admin</option>
-            </select>
+            />
             <button
               type="submit"
               className="px-3 py-1 bg-blue-600 text-white rounded"
