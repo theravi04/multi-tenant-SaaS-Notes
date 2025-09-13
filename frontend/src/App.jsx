@@ -16,7 +16,7 @@ export default function App() {
   const [limitReached, setLimitReached] = useState(false);
   const [health, setHealth] = useState(null);
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("member");
+  const [role, setRole] = useState("");
   const [msg, setMsg] = useState(null);
   const [toEdit, setToEdit] = useState(null);
   const [updatedTitle, setUpdatedTitle] = useState("");
@@ -41,7 +41,7 @@ export default function App() {
         json: { email, password },
       });
       // Expected res: { token, user: { email, role, tenant: { slug } } }
-      console.log(res);
+      // console.log(res);
 
       const t = res.token;
       const u = res.user;
@@ -297,13 +297,20 @@ export default function App() {
           </div>
           <div className="flex items-center gap-2">
             {user.role === "admin" && (
-              <button
-                onClick={upgradeTenant}
-                className="px-3 py-1 rounded bg-yellow-400 hover:bg-yellow-500 text-sm"
-              >
-                Upgrade Tenant
-              </button>
-            )}
+  user.tenantPlan === "free" ? (
+    <button
+      onClick={upgradeTenant}
+      className="px-3 py-1 rounded bg-yellow-400 hover:bg-yellow-500 text-sm"
+    >
+      Upgrade Tenant
+    </button>
+  ) : (
+    <span className="px-3 py-1 rounded bg-green-400 text-sm">
+      Already Upgraded
+    </span>
+  )
+)}
+
             <button
               onClick={logout}
               className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm"
