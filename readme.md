@@ -50,3 +50,22 @@ POST /tenants/:slug/invite  -> Invite user to tenant (Protected + Admin)
 React.js + Vite + TailwindCSS
 ### Backend
 Node.js + Express.js + Neon Serverless Postgres + Prisma
+### Database Approach
+Shared Schema with a tenant ID column
+1) Single Schema
+2) Tenant isolation via tenantId column, both User and Note have a tenantId field pointing to the Tenant model.
+### Database steps
+1) Add a .env file with below URL
+```
+DATABASE_URL="url from Neon Serverless Postgres dashboard"
+```
+2) Create Your Schema
+
+3) Apply schema.prisma to DB
+```
+npx prisma migrate dev --name init
+```
+4) Seed the given data
+```
+node prisma/seed.js
+```
