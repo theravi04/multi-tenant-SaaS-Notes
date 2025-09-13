@@ -1,5 +1,6 @@
 export async function apiFetch(path, token, options = {}) {
-const API_BASE = "http://localhost:4000";
+const API_BASE = "https://multi-tenant-saas-notes.onrender.com";
+// const API_BASE = "http://localhost:4000";
   const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
   const headers = options.headers || {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
