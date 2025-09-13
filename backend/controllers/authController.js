@@ -1,4 +1,4 @@
-import prisma from "../db.js";
+import prisma from "../config/db.js";
 import bcrypt from "bcryptjs";
 import generateToken from "../utils/generateToken.js";
 
@@ -24,6 +24,7 @@ export const login = async (req, res) => {
       role: user.role,
       tenantId: user.tenantId,
       tenantSlug: tenant?.slug ?? null,
+      tenantPlan: tenant.plan,
     },
   });
 };

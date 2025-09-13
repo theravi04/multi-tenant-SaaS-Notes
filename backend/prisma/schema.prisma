@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("")
+  url      = env("DATABASE_URL")
 }
 
 model Tenant {
@@ -25,6 +25,9 @@ model User {
   role      Role     @default(member)
   tenantId  String
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  notes     Note[]   @relation("UserNotes")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -35,7 +38,10 @@ model Note {
   content   String?
   tenantId  String
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
   createdBy String
+  author    User     @relation("UserNotes", fields: [createdBy], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

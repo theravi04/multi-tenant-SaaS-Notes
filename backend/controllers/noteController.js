@@ -1,13 +1,25 @@
-import prisma from "../db.js";
+import prisma from "../config/db.js";
 
 export const createNote = async (req, res) => {
   try {
     const { title, content } = req.body;
 
-    const tenant = await prisma.tenant.findUnique({ where: { id: req.user.tenantId }, include: { notes: true } });
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: req.user.tenantId },
+      include: { notes: true },
+    });
 
-    if (tenant.plan === "free" && tenant.notes.length >= 3) {
-      return res.status(403).json({ message: "Free plan limit reached. Upgrade to Pro." });
+    const noteCount = await prisma.note.count({
+      where: {
+        tenantId: req.user.tenantId,
+        createdBy: req.user.id,
+      }
+    })
+
+    if (tenant.plan === "free" && noteCount >= 3 ) {
+      return res
+        .status(403)
+        .json({ message: "Free plan limit reached. Upgrade to Pro." });
     }
 
     const note = await prisma.note.create({
@@ -15,8 +27,8 @@ export const createNote = async (req, res) => {
         title,
         content,
         tenantId: req.user.tenantId,
-        createdBy: req.user.id
-      }
+        createdBy: req.user.id,
+      },
     });
 
     res.json(note);
@@ -26,7 +38,10 @@ export const createNote = async (req, res) => {
 };
 
 export const getNotes = async (req, res) => {
-  const notes = await prisma.note.findMany({ where: { tenantId: req.user.tenantId } });
+  const notes = await prisma.note.findMany({
+    where: { tenantId: req.user.tenantId, createdBy: req.user.id, },
+    include: { author: { select: { id: true, email: true } } },
+  });
   res.json(notes);
 };
 
@@ -46,7 +61,7 @@ export const updateNote = async (req, res) => {
 
   const updated = await prisma.note.update({
     where: { id: req.params.id },
-    data: req.body
+    data: req.body,
   });
 
   res.json(updated);

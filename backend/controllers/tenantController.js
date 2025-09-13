@@ -1,8 +1,10 @@
-import prisma from "../db.js";
+import prisma from "../config/db.js";
 import bcrypt from "bcryptjs";
 
 // POST /tenants/:slug/upgrade  (Admin-only)
 export const upgradeTenant = async (req, res) => {
+  // console.log("Upgrade route hit:", req.params.slug, req.user);
+
   const { slug } = req.params;
   const tenant = await prisma.tenant.findUnique({ where: { slug } });
   if (!tenant) return res.status(404).json({ message: "Tenant not found" });
