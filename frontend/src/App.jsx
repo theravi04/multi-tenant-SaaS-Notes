@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { apiFetch } from "./api/apiFetch.js"
+import { apiFetch } from "./api/apiFetch.js";
 import { saveSession, clearSession, loadSession } from "./utils/session";
 import LoginForm from "./components/LoginForm.jsx";
-
+import EditNoteModal from "./components/EditNoteModel.jsx";
+import NotesList from "./components/NotesList";
 
 export default function App() {
   const [token, setToken] = useState(null);
@@ -30,6 +31,7 @@ export default function App() {
     }
   }, []);
 
+  // to login
   async function login(email, password) {
     setLoading(true);
     setMessage(null);
@@ -57,7 +59,7 @@ export default function App() {
       setLoading(false);
     }
   }
-
+  // to logout
   async function logout() {
     clearSession();
     setToken(null);
@@ -66,6 +68,7 @@ export default function App() {
     setMessage({ type: "info", text: "Logged out" });
   }
 
+  // fetching notes
   async function fetchNotes(currentToken = token) {
     if (!currentToken) return;
     setLoading(true);
@@ -88,6 +91,7 @@ export default function App() {
   }
   // console.log(user);
 
+  // create notes
   async function createNote(e) {
     e.preventDefault();
     if (!token) return setMessage({ type: "error", text: "Not authenticated" });
@@ -126,6 +130,7 @@ export default function App() {
     }
   }
 
+  // get the note that has to be edited
   async function editNote(id) {
     if (!token) return setMessage({ type: "error", text: "Not authenticated" });
     // if (!confirm("Edit this note?")) return;
@@ -142,6 +147,8 @@ export default function App() {
       });
     }
   }
+
+  // update the note
   async function updateNote(id) {
     if (!token) return setMessage({ type: "error", text: "Not authenticated" });
 
@@ -169,6 +176,7 @@ export default function App() {
     }
   }
 
+  // delete note
   async function deleteNote(id) {
     if (!token) return setMessage({ type: "error", text: "Not authenticated" });
     if (!confirm("Delete this note?")) return;
@@ -188,10 +196,11 @@ export default function App() {
     }
   }
 
+  // invite a user to slug-by admin
   async function invite(e) {
     e.preventDefault();
     try {
-      const res = await fetch(`${API_BASE}/tenants/${tenantSlug}/invite`, {
+      const res = await apiFetch(`${API_BASE}/tenants/${tenantSlug}/invite`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -208,6 +217,7 @@ export default function App() {
     }
   }
 
+  // refresh the plan of current user(admin) after upgrade
   async function fetchMe(currentToken = token) {
     const res = await apiFetch(`/auth/me`, currentToken, { method: "GET" });
     saveSession(currentToken, res.user);
@@ -215,6 +225,7 @@ export default function App() {
     return res.user;
   }
 
+  // upgrade the limit
   async function upgradeTenant() {
     // console.log("here");
     console.log(token, user);
@@ -246,6 +257,7 @@ export default function App() {
     }
   }
 
+  // to check
   async function checkHealth() {
     try {
       const res = await apiFetch(`/health`, null, { method: "GET" });
@@ -272,7 +284,6 @@ export default function App() {
         message={message}
         health={health}
       />
-      
     );
   }
 
@@ -442,87 +453,20 @@ export default function App() {
                 {message.text}
               </div>
             )}
-
-            {notes.length === 0 ? (
-              <div className="text-sm text-gray-500">No notes yet.</div>
-            ) : (
-              <div className="space-y-3">
-                {notes.map((n) => (
-                  <div key={n.id || n._id} className="border rounded p-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="font-semibold">{n.title}</div>
-                        <div className="text-sm text-gray-600 mt-1">
-                          {n.content}
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          By: {n.author.email || "Unknown"}
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="text-xs text-gray-400">
-                          {n.createdAt
-                            ? new Date(n.createdAt).toLocaleString()
-                            : ""}
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => editNote(n.id || n._id)}
-                            className="px-2 py-1 text-xs rounded bg-slate-500 text-white hover:cursor-pointer"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => deleteNote(n.id || n._id)}
-                            className="px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:cursor-pointer"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <NotesList notes={notes} onEdit={editNote} onDelete={deleteNote} />
           </section>
         </main>
       </div>
       {toEdit && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-96 p-6 relative">
-            <button
-              onClick={() => setToEdit(null)}
-              className="text-4xl absolute top-2 p-2 right-4 text-black hover:text-gray-800"
-            >
-              x
-            </button>
-
-            <h2 className="text-xl font-semibold mb-4">Edit Note</h2>
-
-            <input
-              type="text"
-              value={updatedTitle}
-              onChange={(e) => setUpdatedTitle(e.target.value)}
-              className="mt-1 block w-full border rounded px-2 py-1"
-            />
-
-            <textarea
-              value={updatedContent}
-              onChange={(e) => setUpdatedContent(e.target.value)}
-              className="mt-1 block w-full border rounded px-2 py-1 h-24"
-            />
-
-            <div>
-              <button
-                className="border p-1"
-                onClick={() => updateNote(toEdit.id)}
-              >
-                Update
-              </button>
-            </div>
-          </div>
-        </div>
+        <EditNoteModal
+          note={toEdit}
+          updatedTitle={updatedTitle}
+          setUpdatedTitle={setUpdatedTitle}
+          updatedContent={updatedContent}
+          setUpdatedContent={setUpdatedContent}
+          onClose={() => setToEdit(null)}
+          onUpdate={updateNote}
+        />
       )}
     </div>
   );
