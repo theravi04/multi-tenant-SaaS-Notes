@@ -1,47 +1,8 @@
 import { useEffect, useState } from "react";
+import { apiFetch } from "./api/apiFetch.js"
+import { saveSession, clearSession, loadSession } from "./utils/session";
+import LoginForm from "./components/LoginForm.jsx";
 
-const API_BASE = "http://localhost:4000";
-
-function saveSession(token, user) {
-  localStorage.setItem("saas_token", token);
-  localStorage.setItem("saas_user", JSON.stringify(user));
-}
-function clearSession() {
-  localStorage.removeItem("saas_token");
-  localStorage.removeItem("saas_user");
-}
-function loadSession() {
-  const token = localStorage.getItem("saas_token");
-  const userStr = localStorage.getItem("saas_user");
-  return { token, user: userStr ? JSON.parse(userStr) : null };
-}
-
-async function apiFetch(path, token, options = {}) {
-  const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
-  const headers = options.headers || {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  if (!options.body && options.json) {
-    headers["Content-Type"] = "application/json";
-    options.body = JSON.stringify(options.json);
-  }
-  const res = await fetch(url, { ...options, headers });
-  const text = await res.text();
-  let json = null;
-  try {
-    json = text ? JSON.parse(text) : null;
-  } catch (e) {
-    json = text;
-  }
-  if (!res.ok) {
-    const err = new Error(
-      (json && json.message) || res.statusText || "API error"
-    );
-    err.status = res.status;
-    err.body = json;
-    throw err;
-  }
-  return json;
-}
 
 export default function App() {
   const [token, setToken] = useState(null);
@@ -296,16 +257,6 @@ export default function App() {
     }
   }
 
-  const QuickLogin = ({ email }) => (
-    <button
-      className="px-3 py-1 bg-gray-100 rounded text-sm mr-2 hover:bg-gray-200"
-      onClick={() => (document.getElementById("login-email").value = email)}
-      title={`Fill ${email}`}
-    >
-      {email}
-    </button>
-  );
-
   useEffect(() => {
     if (toEdit) {
       setUpdatedTitle(toEdit.title);
@@ -315,81 +266,13 @@ export default function App() {
 
   if (!token || !user) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow">
-          <h1 className="text-2xl font-semibold mb-4">SaaS Notes — Sign in</h1>
-          <p className="text-sm text-gray-500 mb-4">
-            Use one of the test accounts below (password: <code>password</code>)
-          </p>
-          <div className="mb-3">
-            <QuickLogin email="admin@acme.test" />
-            <QuickLogin email="user@acme.test" />
-            <QuickLogin email="admin@globex.test" />
-            <QuickLogin email="user@globex.test" />
-          </div>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const email = document.getElementById("login-email").value;
-              const pw = document.getElementById("login-password").value;
-              login(email, pw);
-            }}
-          >
-            <label className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              id="login-email"
-              defaultValue="user@acme.test"
-              required
-              className="mt-1 block w-full border rounded px-3 py-2"
-            />
-            <label className="block text-sm font-medium text-gray-700 mt-3">
-              Password
-            </label>
-            <input
-              id="login-password"
-              type="password"
-              defaultValue="password"
-              required
-              className="mt-1 block w-full border rounded px-3 py-2"
-            />
-            <div className="flex items-center justify-between mt-4">
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Sign in
-              </button>
-              <button
-                type="button"
-                onClick={checkHealth}
-                className="text-sm text-gray-600 underline"
-              >
-                Health check
-              </button>
-            </div>
-          </form>
-          {message && (
-            <div
-              className={`mt-4 p-2 rounded ${
-                message.type === "error"
-                  ? "bg-red-100 text-red-700"
-                  : message.type === "success"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-700"
-              }`}
-            >
-              {message.text}
-            </div>
-          )}
-          {health && (
-            <div className="mt-2 text-xs text-gray-500">
-              Health: {JSON.stringify(health)}
-            </div>
-          )}
-        </div>
-      </div>
+      <LoginForm
+        login={login}
+        checkHealth={checkHealth}
+        message={message}
+        health={health}
+      />
+      
     );
   }
 
