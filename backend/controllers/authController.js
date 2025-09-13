@@ -28,3 +28,39 @@ export const login = async (req, res) => {
     },
   });
 };
+
+export const getMe = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        tenantId: true,
+        tenant: {
+          select: {
+            slug: true,
+            plan: true,
+          },
+        },
+      },
+    });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Flatten tenant info
+    const userWithTenant = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      tenantId: user.tenantId,
+      tenantSlug: user.tenant.slug,
+      tenantPlan: user.tenant.plan,
+    };
+
+    res.json({ user: userWithTenant });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

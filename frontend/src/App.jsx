@@ -120,7 +120,7 @@ export default function App() {
       setLoading(false);
     }
   }
-// console.log(user);
+  // console.log(user);
 
   async function createNote(e) {
     e.preventDefault();
@@ -199,10 +199,17 @@ export default function App() {
     }
   }
 
+  async function fetchMe(currentToken = token) {
+    const res = await apiFetch(`/auth/me`, currentToken, { method: "GET" });
+    saveSession(currentToken, res.user);
+    setUser(res.user);
+    return res.user;
+  }
+
   async function upgradeTenant() {
     // console.log("here");
-    console.log(token,user);
-    
+    console.log(token, user);
+
     if (!token || !user) return;
     if (!confirm("Upgrade tenant to Pro? This action is immediate.")) return;
     setLoading(true);
@@ -211,6 +218,8 @@ export default function App() {
       await apiFetch(`/tenants/${user.tenantSlug}/upgrade`, token, {
         method: "POST",
       });
+      const updatedUser = await fetchMe(token);
+      setUser(updatedUser);
       setMessage({
         type: "success",
         text: "Tenant upgraded to Pro successfully",
@@ -330,7 +339,6 @@ export default function App() {
   }
 
   console.log(notes);
-  
 
   return (
     <div className="min-h-screen bg-slate-50 p-6">
@@ -360,45 +368,47 @@ export default function App() {
           </div>
         </header>
 
-        <form
-          onSubmit={invite}
-          className="space-y-2 bg-white p-4 rounded shadow mb-4"
-        >
-          <h3 className="font-semibold">Invite User</h3>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            required
-            className="w-full border rounded px-2 py-1"
-          />
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full border rounded px-2 py-1"
+        {user.role === "admin" && (
+          <form
+            onSubmit={invite}
+            className="space-y-2 bg-white p-4 rounded shadow mb-4"
           >
-            <option value="Member">Member</option>
-            <option value="Admin">Admin</option>
-          </select>
-          <button
-            type="submit"
-            className="px-3 py-1 bg-blue-600 text-white rounded"
-          >
-            Invite
-          </button>
-          {msg && (
-            <div
-              className={`p-2 rounded text-sm ${
-                msg.type === "error"
-                  ? "bg-red-100 text-red-700"
-                  : "bg-green-100 text-green-700"
-              }`}
+            <h3 className="font-semibold">Invite User</h3>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              required
+              className="w-full border rounded px-2 py-1"
+            />
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full border rounded px-2 py-1"
             >
-              {msg.text}
-            </div>
-          )}
-        </form>
+              <option value="Member">Member</option>
+              <option value="Admin">Admin</option>
+            </select>
+            <button
+              type="submit"
+              className="px-3 py-1 bg-blue-600 text-white rounded"
+            >
+              Invite
+            </button>
+            {msg && (
+              <div
+                className={`p-2 rounded text-sm ${
+                  msg.type === "error"
+                    ? "bg-red-100 text-red-700"
+                    : "bg-green-100 text-green-700"
+                }`}
+              >
+                {msg.text}
+              </div>
+            )}
+          </form>
+        )}
 
         {limitReached && (
           <div className="mb-4 p-3 rounded bg-red-50 border border-red-200">
@@ -461,10 +471,7 @@ export default function App() {
               </div>
             </form>
             <div className="mt-4 text-xs text-gray-500">
-              Plan:{" "}
-              <strong>
-                {limitReached ? "Free (limit reached)" : "Unknown / Pro"}
-              </strong>
+              Plan: <strong>{user.tenantPlan}</strong>
             </div>
           </section>
 
@@ -503,7 +510,6 @@ export default function App() {
             ) : (
               <div className="space-y-3">
                 {notes.map((n) => (
-                  
                   <div key={n.id || n._id} className="border rounded p-3">
                     <div className="flex items-start justify-between">
                       <div>
@@ -522,7 +528,6 @@ export default function App() {
                             : ""}
                         </div>
                         <div className="flex gap-2">
-                          
                           <button
                             onClick={() => deleteNote(n.id || n._id)}
                             className="px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:cursor-pointer"
