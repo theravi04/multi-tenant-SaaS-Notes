@@ -56,6 +56,9 @@ export default function App() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("Member");
   const [msg, setMsg] = useState(null);
+  const [toEdit, setToEdit] = useState(null);
+  const [updatedTitle, setUpdatedTitle] = useState("");
+  const [updatedContent, setUpdatedContent] = useState("");
 
   useEffect(() => {
     const s = loadSession();
@@ -109,6 +112,8 @@ export default function App() {
     try {
       const res = await apiFetch(`/notes`, currentToken, { method: "GET" });
       // assume res is array of notes
+      // console.log(res);
+
       setNotes(Array.isArray(res) ? res : res.notes || []);
     } catch (err) {
       console.error(err);
@@ -155,6 +160,49 @@ export default function App() {
           text: err.message || "Failed to create note",
         });
       }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function editNote(id) {
+    if (!token) return setMessage({ type: "error", text: "Not authenticated" });
+    // if (!confirm("Edit this note?")) return;
+    // setLoading(true);
+    try {
+      const res = await apiFetch(`/notes/${id}`, token);
+      // console.log(res);
+      setToEdit(res);
+    } catch (error) {
+      console.error(err);
+      setMessage({
+        type: "error",
+        text: err.message || "Failed to edit note",
+      });
+    }
+  }
+  async function updateNote(id) {
+    if (!token) return setMessage({ type: "error", text: "Not authenticated" });
+
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const res = await apiFetch(`/notes/${id}`, token, {
+        method: "PUT", // use PUT for update
+        json: { title: updatedTitle, content: updatedContent },
+      });
+
+      // Close popup and refresh notes
+      setToEdit(null);
+      setMessage({ type: "success", text: "Note updated" });
+      await fetchNotes(token);
+    } catch (err) {
+      console.error(err);
+      setMessage({
+        type: "error",
+        text: err.message || "Failed to update note",
+      });
     } finally {
       setLoading(false);
     }
@@ -258,6 +306,13 @@ export default function App() {
     </button>
   );
 
+  useEffect(() => {
+    if (toEdit) {
+      setUpdatedTitle(toEdit.title);
+      setUpdatedContent(toEdit.content);
+    }
+  }, [toEdit]);
+
   if (!token || !user) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
@@ -338,7 +393,7 @@ export default function App() {
     );
   }
 
-  console.log(notes);
+  // console.log(toEdit);
 
   return (
     <div className="min-h-screen bg-slate-50 p-6">
@@ -529,6 +584,12 @@ export default function App() {
                         </div>
                         <div className="flex gap-2">
                           <button
+                            onClick={() => editNote(n.id || n._id)}
+                            className="px-2 py-1 text-xs rounded bg-slate-500 text-white hover:cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                          <button
                             onClick={() => deleteNote(n.id || n._id)}
                             className="px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:cursor-pointer"
                           >
@@ -544,6 +605,42 @@ export default function App() {
           </section>
         </main>
       </div>
+      {toEdit && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-96 p-6 relative">
+            <button
+              onClick={() => setToEdit(null)}
+              className="text-4xl absolute top-2 p-2 right-4 text-black hover:text-gray-800"
+            >
+              x
+            </button>
+
+            <h2 className="text-xl font-semibold mb-4">Edit Note</h2>
+
+            <input
+              type="text"
+              value={updatedTitle}
+              onChange={(e) => setUpdatedTitle(e.target.value)}
+              className="mt-1 block w-full border rounded px-2 py-1"
+            />
+
+            <textarea
+              value={updatedContent}
+              onChange={(e) => setUpdatedContent(e.target.value)}
+              className="mt-1 block w-full border rounded px-2 py-1 h-24"
+            />
+
+            <div>
+              <button
+                className="border p-1"
+                onClick={() => updateNote(toEdit.id)}
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

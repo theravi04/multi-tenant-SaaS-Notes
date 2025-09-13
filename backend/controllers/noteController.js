@@ -39,7 +39,7 @@ export const createNote = async (req, res) => {
 
 export const getNotes = async (req, res) => {
   const notes = await prisma.note.findMany({
-    where: { tenantId: req.user.tenantId, createdBy: req.user.id, },
+    where: { tenantId: req.user.tenantId, },
     include: { author: { select: { id: true, email: true } } },
   });
   res.json(notes);
