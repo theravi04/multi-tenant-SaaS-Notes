@@ -48,6 +48,12 @@ POST /tenants/:slug/upgrade -> Upgrade tenant subscription (Protected + Admin)
 
 POST /tenants/:slug/invite  -> Invite user to tenant (Protected + Admin)
 ```
+### .env
+PORT=
+
+JWT_SECRET=
+
+DATABASE_URL=""
 
 ## Technology Used
 ### Frontend
